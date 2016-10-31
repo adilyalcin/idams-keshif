@@ -4,11 +4,9 @@
     <title>IDAMS - Bangladesh</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript" src="./js/jquery-1.11.1.min.js"></script>
     <script type="text/javascript" src="./js/d3.4.2.6.min.js" charset="utf-8"></script>
     <script type="text/javascript" src="./keshif/keshif.js" charset="utf-8"></script>
-    <script type="text/javascript" src="./js/papaparse.min.js" charset="utf-8"></script>
     <link rel="stylesheet" href="./keshif/keshif.css" type="text/css">
     <link rel="stylesheet" href="./font-awesome/css/font-awesome.min.css">
 
@@ -16,12 +14,12 @@
     <link rel="stylesheet" href="./keshif/custom.css" type="text/css">
 
     <script src="./js/topojson.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.0/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.0.0/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="./leaflet/leaflet.css" />
+    <script src="./leaflet/leaflet.js"></script>
 
     <script type="text/javascript">
 
-var _geo = {};
+var _geo = {}; // holds indexed geo-json objects for mapping
 
 // To process raw GeoJSON files:
 // mapshaper -i bgd_bnd_adm1.json -simplify 10% -o simple1.json
@@ -30,16 +28,17 @@ var _geo = {};
 // topojson -o adm_2.json simple2.json -p
 // topojson -o adm_3.json simple3.json -p
 
-
 function loadData(browser){
   // Load topojson file
   var records = kshf.dt_id["Country Data (2012)"];
+  browser.asyncDataWaitedCnt+=3;
   $.ajax({
     url: './geojson/adm_1.json',
     async: false,
     success: function(topojsonData){
       topojson.feature(topojsonData, topojsonData.objects.simple1)
         .features.forEach(function(feature){ _geo["1_"+feature.properties.Division] = feature; });
+      browser.asyncDataLoaded();
     }
   });
   $.ajax({
@@ -48,6 +47,7 @@ function loadData(browser){
     success: function(topojsonData){
       topojson.feature(topojsonData, topojsonData.objects.simple2)
         .features.forEach(function(feature){ _geo["2_"+feature.properties.District] = feature; });
+      browser.asyncDataLoaded();
     }
   });
   $.ajax({
@@ -56,9 +56,9 @@ function loadData(browser){
     success: function(topojsonData){
       topojson.feature(topojsonData, topojsonData.objects.simple3)
         .features.forEach(function(feature){ _geo["3_"+feature.properties.Upazila] = feature; });
+      browser.asyncDataLoaded();
     }
   });
-  browser.loadCharts();
 };
 
 var mapLevelSelectDOM = null;
@@ -77,18 +77,26 @@ function setMapRegionLevel(v){
   summary.updateChartScale_Measure();
 };
 
-google.charts.setOnLoadCallback(function(){
+$(document).ready( function() {
   browser = new kshf.Browser({
     domID: "#demo_Browser",
     recordName: "Incidents",
     source: {
-      gdocId: "1Ul1Tfs8l3TIK-3JaxpP8BTPiBS9EoWrukiTPfVC1yV8",
-      tables: "Incidents",
+      dirPath: 'https://storage.googleapis.com/keshif-data/',
+      fileType: "json",
+      tables: "incidents",
       callback: loadData
     },
     onLoad: function(){
+      var p = d3.timeParse("%Y-%m-%d");
+      this.records.forEach(function(r){
+        r.data.Date = p(r.data.Date);
+        //if(r.data.Date) return r.data.Date.getFullYear()>2014;
+      });
+
       this.records = this.records.filter(function(r){
-        return (r.data.Date.getFullYear()>2014);
+        if(r.data.Date) return r.data.Date.getFullYear()>2014;
+        return true;
       });
     },
     onReady: function(){
@@ -98,33 +106,30 @@ google.charts.setOnLoadCallback(function(){
         d3.select(dom).classed("geo_level_"+id.substr(0,1),true);
       };
 
-      // summaryControls
-      var s = this.summaries_by_name["Location of the Incident"];
-      var d = s.DOM.summaryControls;
-        d.style('height','22px');
-      var h = d.append("div").styles({ 
-        display: "inline-block",
-        position: "absolute",
-        top: "2px",
-        right: "15px",
-        "font-size": "0.8em",
-        "font-weight": "300",
-      });
+      var h =  s.DOM.summaryControls.style('height','22px')
+        .append("div").styles({ 
+          display: "inline-block",
+          position: "absolute",
+          top: "2px",
+          right: "15px",
+          "font-size": "0.8em",
+          "font-weight": "300",
+        });
       h.append("span").text("View by: ");
       mapLevelSelectDOM = h.append("select")
         .on("change", function(){ setMapRegionLevel(this.value); });
+      
       mapLevelSelectDOM.append("option").attr("value",1).text("Division");
       mapLevelSelectDOM.append("option").attr("value",2).text("District");
       mapLevelSelectDOM.append("option").attr("value",3).text("Upazila");
-/*
-      s.leafletAttrMap.setView(L.latLng(23.654587852202987,90.340576171875) , 7);
-      setTimeout(function(){ 
-        s.leafletAttrMap.setView(L.latLng(23.654587852202987,90.340576171875) , 7);
-      }, 600);
-      */
 
       this.summaries_by_name["District"].destroy();
       this.summaries_by_name["Division"].destroy();
+      this.summaries_by_name["Upazila"].destroy();
+
+      this.summaries_by_name["Source"].destroy();
+
+/*
       this.summaries_by_name["Incident Cause"].destroy();
       this.summaries_by_name["Incident Cause 1"].destroy();
       this.summaries_by_name["Incident Cause 2"].destroy();
@@ -140,7 +145,6 @@ google.charts.setOnLoadCallback(function(){
       this.summaries_by_name["Type of Casualty"].destroy();
       this.summaries_by_name["Type of Casualty 2"].destroy();
       this.summaries_by_name["Type of Casualty 3"].destroy();
-      this.summaries_by_name["Upazila"].destroy();
       this.summaries_by_name["Victims"].destroy();
       this.summaries_by_name["Victim 1"].destroy();
       this.summaries_by_name["Victim 2"].destroy();
@@ -158,28 +162,21 @@ google.charts.setOnLoadCallback(function(){
       
       this.summaries_by_name["Type of Consequence 1"].destroy();
 
+      */
       setMapRegionLevel("2");
 
       var N = d3.select(".panel.panel_middle").node();
       N.parentNode.insertBefore(N,N.parentNode.firstChild);
 
-      //this.summaries_by_name[""].destroy();
     },
     summaries: [
-      { name: "Incident Type", },
-      { name: "Casualty Types",
-        value: function (){
-          return [this['Type of Casualty'], this['Type of Casualty 2'], this['Type of Casualty 3'],
-            this['Type of Consequence 1']];
-        } },
-      { name: "Incident Causes",
-        value: function (){
-          return [this['Incident Cause 1'], this['Incident Cause 2'], this['Incident Cause']];
-        } },
-      { name: "Risk Categories", collapsed: true,
+      { name: "Incident Type", value: "Type" },
+      { name: "Casualty Types", value: "Consequences" },
+      { name: "Incident Causes", value: "Causes"},
+      /* { name: "Risk Categories", collapsed: true,
         value: function (){
           return [this['Risk Category 1'], this['Risk Category 2'], this['Risk Category']];
-        } },
+        } }, */
       {
         name: "Location of the Incident",
         value: function(){
@@ -197,66 +194,35 @@ google.charts.setOnLoadCallback(function(){
           7 //zoom
         ],
         catLabel: function(){ return this.id.substr(2,10000); },
-        catMap:   function(){ return _geo[this.id]; },
-        onMapProject: function(){
-          return;
-          // Do not need to auto-adjust what region detail is shown. 
-          // More annoying than helpful for the most people
-          var z =this.leafletAttrMap.getZoom();
-          if     (z <=7) { setMapRegionLevel("1"); }
-          else if(z===8) { setMapRegionLevel("2"); }
-          else if(z >=9) { setMapRegionLevel("3"); }
+        catMap:   function(){ 
+          return _geo[this.id];
         }
       },
-/*      { name: "Division",
-        panel: "right",
-        viewAs: "map",
-        catMap: function(){ return _geo["1_"+this.id]; }
-      },
-      { name: "District",
-        panel: "right",
-        viewAs: "map",
-        catMap: function(){ return _geo["2_"+this.id]; }
-      },
-      { name: "Upazila",
-        panel: "right",
-        collapsed: true
-      },*/
-      { name: "Victim Types",
-        panel: "right",
-        value: function (){
-          return [this['Victims'], this['Victim 1'], this['Victim 2'], 
-            this['Victim 3'], this['Victim 4'], this['Victim 5']];
-        } },
-      { name: "Perpetrator Types",
-        panel: "right",
-        value: function (){
-            return [this['Perpetrator'], this['Perpetrator 1'], this['Perpetrator 2'], 
-              this['Perpetrator 3'], this['Perpetrator 4'], this['Perpetrator 5']];
-          }
-        },
+      { name: "Victim Types", value: "Responders",
+        panel: "right" },
+      { name: "Perpetrator Types", value: "Instigators",
+        panel: "right" },
       { name: "Date",
-        panel: "right",
-        "intervalScale": "time"
-      },
-      { name: "Death Casualty on Incident",
+        panel: "right" },
+/*      { name: "Death Casualty on Incident",
         panel: "right",
         value: function(){
           if(this['Type of Casualty']==='Death' && this['Casualty Count']) return this['Casualty Count'];
         },
         collapsed: true,
-      }
+      }*/
     ],
     leftPanelLabelWidth: 220,
     rightPanelLabelWidth: 320,
     middlePanelLabelWidth: 160,
     recordDisplay: {
       displayType: "list",
-      textSearch: "Description",
-      recordView: "Description",
       sortBy: "Date",
       sortColWidth: 69,
-      detailsToggle: "zoom"
+      detailsToggle: "zoom",
+      recordView: function(){
+        return "<a href='"+this.Source+"' target='_blank'>Visit incident...</a>";
+      }
     }
   }
   );
