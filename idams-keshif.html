@@ -221,12 +221,21 @@ $(document).ready( function() {
       sortColWidth: 69,
       detailsToggle: "zoom",
       recordView: function(){
-        return "<a href='"+this.Source+"' target='_blank'>Visit incident...</a>";
+        return "<span class='clickForDetails' onClick='showIncidentDetails();'> Click to view details </span>";
+      },
+      onDetail: function(){
+        return "<iframe src='http://idams-bd.org/data-entry/incident/view/"
+          +this._id+"' style='height: 70vh; width: 70vw;'>";
       }
     }
   }
   );
 });
+
+function showIncidentDetails(){
+  var r = this.event.target.parentNode.__data__;
+  browser.updateRecordDetailPanel(r);
+};
     </script>
 	</head>
 <style>
@@ -256,6 +265,10 @@ $(document).ready( function() {
 .scaleModeControl.measureAxis_2{ display: none !important; }
 .tick > .text.measureAxis_2{ display: none !important; }
 
+.clickForDetails{
+  font-size: 0.9em;
+  color: gray;
+}
 </style>
   <body>
     <div class="contents">
