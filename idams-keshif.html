@@ -123,11 +123,14 @@ $(document).ready( function() {
       mapLevelSelectDOM.append("option").attr("value",2).text("District");
       mapLevelSelectDOM.append("option").attr("value",3).text("Upazila");
 
+      setMapRegionLevel("2");
+
+      var N = d3.select(".panel.panel_middle").node();
+      N.parentNode.insertBefore(N,N.parentNode.firstChild);
+
       this.summaries_by_name["District"].destroy();
       this.summaries_by_name["Division"].destroy();
       this.summaries_by_name["Upazila"].destroy();
-
-      this.summaries_by_name["Source"].destroy();
 
 /*
       this.summaries_by_name["Incident Cause"].destroy();
@@ -163,10 +166,6 @@ $(document).ready( function() {
       this.summaries_by_name["Type of Consequence 1"].destroy();
 
       */
-      setMapRegionLevel("2");
-
-      var N = d3.select(".panel.panel_middle").node();
-      N.parentNode.insertBefore(N,N.parentNode.firstChild);
 
     },
     summaries: [
