@@ -174,7 +174,7 @@ $(document).ready( function() {
     summaries: [
       { name: "Incident Type", value: "Type" },
       { name: "Casualty Types", value: "Consequences" },
-      { name: "Incident Causes", value: "Causes"},
+      { name: "Incident Causes", value: "Causes", collapsed: true},
       /* { name: "Risk Categories", collapsed: true,
         value: function (){
           return [this['Risk Category 1'], this['Risk Category 2'], this['Risk Category']];
@@ -205,7 +205,27 @@ $(document).ready( function() {
       { name: "Perpetrator Types", value: "Instigators",
         panel: "right" },
       { name: "Date",
-        panel: "right" },
+        panel: "left" },
+      {
+        name: "Number of Victims",
+        value: "NumVictims",
+        panel: 'right',
+        skipZero: true
+      },
+      {
+        name: "Number of Deaths",
+        value: "NumDeaths",
+        panel: 'right',
+        collapsed: true,
+        skipZero: true
+      },
+      {
+        name: "Number of Injuries",
+        value: "NumInjuries",
+        panel: 'right',
+        collapsed: true,
+        skipZero: true
+      }
 /*      { name: "Death Casualty on Incident",
         panel: "right",
         value: function(){
@@ -214,16 +234,17 @@ $(document).ready( function() {
         collapsed: true,
       }*/
     ],
-    leftPanelLabelWidth: 220,
-    rightPanelLabelWidth: 320,
+    leftPanelLabelWidth: 250,
+    rightPanelLabelWidth: 200,
     middlePanelLabelWidth: 160,
+    barChartWidth: 120,
     recordDisplay: {
       displayType: "list",
       sortBy: "Date",
       sortColWidth: 69,
       detailsToggle: "zoom",
       recordView: function(){
-        return "<span class='clickForDetails' onClick='showIncidentDetails();'> Click to view details </span>";
+        return "<span class='clickForDetails' onClick='showIncidentDetails();'> "+this.Description+" </span>";
       },
       onDetail: function(){
         return "<iframe src='http://idams-bd.org/data-entry/incident/view/"
