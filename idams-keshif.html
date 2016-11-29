@@ -13,6 +13,9 @@
     <script type="text/javascript" src="./keshif/custom.js" charset="utf-8"></script>
     <link rel="stylesheet" href="./keshif/custom.css" type="text/css">
 
+    <script type="text/javascript" src="./js/pikaday.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="./js/pikaday.css" type="text/css">
+
     <script src="./js/topojson.min.js"></script>
     <link rel="stylesheet" href="./leaflet/leaflet.css" />
     <script src="./leaflet/leaflet.js"></script>
@@ -64,6 +67,125 @@ function loadData(browser){
   });
 };
 
+function getActor(v){
+  switch(v){
+    case 'Cargo vehicle':
+    case 'Passenger vehicle':
+    case 'Private vehicle':
+    case 'Improvised vehicle':
+    case 'Train':
+    case 'Motorcycle':
+    case 'Rickshaw':
+    case 'Bicycle':
+    case 'CNG tricycle':
+    case 'Airplane/helicopter': return 'Motorized Vehicle';
+
+    case 'Fire':
+    case 'Flood':
+    case 'Health/Medical':
+    case 'Landslide/Mudslide':
+    case 'Landslide/Mudslide/Snowslide':
+    case 'Thunderstorm':
+    case 'Earthquake':
+    case 'Fire Outbreak':
+    case 'Boat Accident':
+    case 'Other Hazard': return 'Hazard';
+
+    case 'Public Space':
+    case 'Public building/facility':
+    case 'Other public property':
+    case 'Real estate property':
+    case 'Real estate':
+    case 'Commercial property':
+    case 'Other private property': return 'Public and Private Property';
+
+    case 'Hindu':
+    case 'Buddhist':
+    case 'Budhist':
+    case 'Christian':
+    case 'Ethnic minorities': return 'Religious and Ethnic Minorities';
+
+    case 'Joint Force Bangladesh':
+    case 'Police Force Bangladesh':
+    case 'Rapid Action Batallion':
+    case 'Border Guard Bangladesh':
+    case 'Bangladesh Ansars and Village Defence Party': return 'Bangladesh Security Forces';
+
+    case 'Coast Guard Bangladesh':
+    case 'Army Bangladesh':
+    case 'Navy Bangladesh':
+    case 'Air Force Bangladesh': return 'Armed Forces';
+
+    case 'Bangladesh Sramik League':
+    case 'Bangladesh Kirshak League':
+    case 'Bangladesh Swechchasebak':
+    case 'Bangladesh Swechchasebak Leauge':
+    case 'Bangladesh Swechchasebak League': return "Other Awami League Branch";
+
+    case 'Jatiyatabadi Sramik Dal':
+    case 'Jatiyatabadi Krishak Dal':
+    case 'Jatiyatabadi Sechchasebak Dal': return "Other BNP Branch";
+    
+    case 'Zaker Party':
+    case 'Khelafat Andolon':
+    case 'Mulsim League':
+    case 'Islami Andolan':
+    case 'Islamic Front':
+    case 'Havezat-e-Islam':
+    case 'Islami Oikya Jote':
+    case 'Khelafat Majlish,':
+    case 'Jamiyate Ulamaye Islam': return "Other Islamist Leaning Parties";
+    
+    case 'Central Government':
+    case 'Central government':
+    case 'Local Government':
+    case 'Local government':
+    case 'Civil Service':
+    case 'Election Commission':
+    case 'Human Rights Commission':
+    case 'Information Commission':
+    case 'Anti Corruption Commission':
+    case 'Judicial Institutions':
+    case 'Universities': return "Public Institutions";
+
+    case 'Bangladesh Chhatro Union':
+    case 'Pragatishil Chhatro Jote':
+    case 'Biplobi Chhatro Moitry':
+    case 'Samajtantrik Chhatro Front':
+    case 'Communist Party of Bangladesh':
+    case 'Socialist Party of Bangladesh':
+    case 'Jatiyo Samajtantrik Dal':
+    case 'Revolutionary Workers Party':
+    case 'Bangladesher Samyabadi Dal':
+    case 'Bikalpa Dhara Bangladesh':
+    case 'Ganatantrik Party':
+    case 'Krishak Sramik Janata League':
+    case 'Gonoforum Party':
+    case 'Jatiya Party':
+    case 'Bangladeshw Nationalist Front':
+    case 'Bangladesh Tariqat Federation':
+    case 'Ganatantri Party':
+    case 'United Peoples Party':
+    case 'Progressive Democratic Party':
+    case 'Liberal Democratic Party':
+    case 'Bikalpadhara Bangladesh':
+    case 'Kalyan Party':
+    case 'Bangladesher Sammaybadi Dal':
+    case 'Bangladesher Samajtantrik Dal':
+    case 'Nagorik Oikyya-Manna':
+    case 'Gana Sanghati Andolan':
+    case 'Jatiya Ganatantrik Party':
+    case 'Jatiya Samajtantrik Dal':
+    case 'National People\'s Party':
+    case 'Oikyabaddha Nagarik Andolan':
+    case 'Parbatya Chattagram Jana Sanghati Samiti (Reformist)':
+    case 'Parbatya Chattagram Jana Sanghati Samiti':
+    case 'United Peoples Democratic Front': return "Other Political Parties";
+
+  }
+  return v;
+}
+
 var mapLevelSelectDOM = null;
 
 function setMapRegionLevel(v){
@@ -75,9 +197,9 @@ function setMapRegionLevel(v){
     aggr.usedAggr = aggrLevel===v;
   });
   if(mapLevelSelectDOM) mapLevelSelectDOM.node().value = v;
-  summary.refreshViz_All();
   summary.updateCatSorting();
   summary.updateChartScale_Measure();
+  summary.refreshViz_Active();
 };
 
 $(document).ready( function() {
@@ -97,8 +219,12 @@ $(document).ready( function() {
         //if(r.data.Date) return r.data.Date.getFullYear()>2014;
       });
 
+      var d=new Date(2015,6,1);
+      d = d.getTime();
       this.records = this.records.filter(function(r){
-        if(r.data.Date) return r.data.Date.getFullYear()>2014;
+        if(r.data.Date) {
+          return r.data.Date.getTime() >= d;
+        }
         return true;
       });
     },
@@ -120,7 +246,9 @@ $(document).ready( function() {
         });
       h.append("span").text("View by: ");
       mapLevelSelectDOM = h.append("select")
-        .on("change", function(){ setMapRegionLevel(this.value); });
+        .on("change", function(){ 
+          setMapRegionLevel(this.value);
+        });
       
       mapLevelSelectDOM.append("option").attr("value",1).text("Division");
       mapLevelSelectDOM.append("option").attr("value",2).text("District");
@@ -134,6 +262,9 @@ $(document).ready( function() {
       this.summaries_by_name["District"].destroy();
       this.summaries_by_name["Division"].destroy();
       this.summaries_by_name["Upazila"].destroy();
+
+      this.recordDisplay.collapseRecordViewSummary(true);
+      this.recordDisplay.DOM.recordDisplayName.html("Incident Descriptions");
 
 /*
       this.summaries_by_name["Incident Cause"].destroy();
@@ -172,9 +303,95 @@ $(document).ready( function() {
 
     },
     summaries: [
-      { name: "Incident Type", value: "Type" },
-      { name: "Casualty Types", value: "Consequences" },
-      { name: "Incident Causes", value: "Causes", collapsed: true},
+      { name: "Incident Type",
+        value: function(){
+          switch(this.Type){
+            case 'Demonstration':
+            case 'Procession':
+            case 'Strike': return 'Demonstration';
+            
+            case 'General Strike':
+            case 'Call for Blockade': return 'General Strike';
+            
+            case 'Fire': 
+            case 'Water Accident ':
+            case 'Water Accident':
+            case 'Railway accident':
+            case 'Infrastructure failure': return 'Other Hazards';
+
+            case 'Natural Hazard':
+            case 'Thunderstorm': return 'Natural Hazards';
+            //case '': return '';
+          }
+          return this.Type;
+        }
+      },
+      { name: "Casualty Types", 
+        value: function(){
+          var r=[];
+          if(this.Consequences) this.Consequences.forEach(function(c){
+            switch(c){
+              case 'Sentence / verdict': return;
+              case 'Arms and weapons recovered': return;
+              case 'Rescued': return;
+              case 'Rescued ': return;
+              case 'Case filed': return;
+              case 'Missing': return;
+              case 'Property loss': return;
+              case 'Torture': return;
+              case 'Delivered Extradition': return;
+              case 'IED recovered': return;
+              case 'Section 144 Imposed': return;
+              case 'Vehicle damaged': return;
+              case 'No Consequence Reported': return;
+              case 'Firearms recovered': return;
+              case 'IED and other explosives recovered': return;
+              case 'Ammunition recovered': return;
+              case 'Ammunition or IED material recovered': return;
+            }
+            r.push(c);
+          });
+          return r;
+        }
+      },
+      { name: "Incident Motivations", 
+        value: function(){
+          var r=[];
+          if(this.Causes) this.Causes.forEach(function(c){
+            switch(c){
+              case 'Tender submission/contracts':
+              case 'Labor rights':
+              case 'Other private dispute':
+              case 'Personal dispute':
+              case 'Dispute over wages':
+              case 'Private dispute': c = 'Economic and Social Motivations'; break;
+              case 'Narcotics':
+              case 'Armed robbery':
+              case 'Petty crime':
+              case 'Organized crime':
+              case 'honor killing':
+              case 'General citizen safety':
+              case 'Looting': c = 'Other Crimes'; break;
+              case 'Ransom': c = 'Extortion'; break;
+              case 'Graft':
+              case 'Bribe':
+              case 'Political rights':
+              case 'Other political motivations': c = 'Other Political Motivations'; break;
+              case 'Hartal/Blocakde':
+              case 'Hartal/Blockade':
+              case 'Other Motivations':
+              case 'Unknown Motivations': c = 'Other Motivations'; break;
+              case 'Radicalism / fundamentalism':
+              case 'Other religious motivation': c = 'Religious Motivations'; break;
+              case 'Sedition / defamation':
+              case 'Sedition/sabotage/defamation':
+              case 'Sabotage': c = 'Sedition/Sabotage/Defamation'; break;
+            }
+            r.push(c);
+          });
+          return r;
+        },
+      },
       /* { name: "Risk Categories", collapsed: true,
         value: function (){
           return [this['Risk Category 1'], this['Risk Category 2'], this['Risk Category']];
@@ -196,20 +413,47 @@ $(document).ready( function() {
           7 //zoom
         ],
         catLabel: function(){ return this.id.substr(2,10000); },
-        catMap:   function(){ 
-          return _geo[this.id];
+        catMap: function(){ return _geo[this.id]; },
+        onMapProject: function(){
+          var v= this.leafletAttrMap.getZoom();
+          if(v<8){
+            setMapRegionLevel('1');
+          }
+          if(v==8){
+            setMapRegionLevel('2');
+          }
+          if(v>8){
+            setMapRegionLevel('3');
+          }
         }
+        // auto adjust the zoom level on zoom
       },
-      { name: "Victim Types", value: "Responders",
+      { name: "Victim Types",
+        value: function(){
+          var r=[];
+          if(this.Responders) this.Responders.forEach(function(c){
+            var v = getActor(c);
+            if(v) r.push(v);
+          });
+          return r;
+        },
         panel: "right" },
-      { name: "Perpetrator Types", value: "Instigators",
+      { name: "Perpetrator Types",
+        value: function(){
+          var r=[];
+          if(this.Instigators) this.Instigators.forEach(function(c){
+            var v = getActor(c);
+            if(v) r.push(v);
+          });
+          return r;
+        },
         panel: "right" },
       { name: "Date",
         panel: "left" },
       {
         name: "Number of Victims",
         value: "NumVictims",
-        panel: 'right',
+        panel: 'none',
         skipZero: true
       },
       {
