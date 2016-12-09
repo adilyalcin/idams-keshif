@@ -82,26 +82,31 @@ function getActor(v){
 
     case 'Allahr Dol':
     case 'Bangladesh Jihad Group':
+    case 'Bangaldesh Jihadi Group':
     case 'Dalautul Islam':
+    case 'Daulatul Islam':
     case 'Harkat Ul-Jihad...':
     case 'Gono Mukti Front':
     case 'Harkat-ul-Jihad-al Islami Bangladesh':
     case 'Harkat-ul-Jihad-al Islami Bangladesh (HUJI-B)-Outlawed':
     case 'Hartkat Ul Ansar':
+    case 'Harkat-Ul-Ansar':
     case 'Hefazat-e-Islam':
     case 'Hizb-Ut Tawhid':
     case 'Hizb-Ut-Tawhid':
     case 'Hizubt-u-Tahrir Bangladesh':
     case 'Hizb-Ut-Tahrir Bangladesh':
     case 'Itehadul Mujahidin':
+    case 'Ittehadul Mujahidin':
     case 'Jagrata Muslim Janata Bangladesh':
     case 'Junud at-Tawheed Wal Khilafah':
     case 'Khelafat Majlish':
     case 'Muslim League':
     case 'Rohingya Solidarity Organization':
+    case 'Rohingya Solidarity Organization (RSO)':
     case 'Shahadat-e Al-Hikma':
     case 'Shaheed Hamza Brigade':
-    case 'Tehrik-e-Khatme... +': 
+    case 'Tehrik-e-Khatme Nabuwwat':
       return 'Other Militant Group';
 
     case 'Fire':
@@ -114,7 +119,7 @@ function getActor(v){
     case 'Fire Outbreak':
     case 'Boat Accident':
     case 'Other Hazard': 
-      return 'Hazard';
+      return 'Natural Hazard';
 
     case 'Public Space':
     case 'Public building/facility':
@@ -144,9 +149,12 @@ function getActor(v){
     case 'Army Bangladesh':
     case 'Navy Bangladesh':
     case 'Air Force Bangladesh':
+    case 'Jail Guard':
+    case 'Jail Guard ':
       return 'Armed Forces';
 
     case 'Bangladesh Sramik League':
+    case 'Bangladesh Krishak League':
     case 'Bangladesh Kirshak League':
     case 'Bangladesh Swechchasebak':
     case 'Bangladesh Swechchasebak Leauge':
@@ -182,7 +190,7 @@ function getActor(v){
     case 'Anti Corruption Commission':
     case 'Judicial Institutions':
     case 'Universities':
-      return "Public Institutions";
+      return ;
 
     case 'Bangladesh Chhatro Union':
     case 'Pragatishil Chhatro Jote':
@@ -247,6 +255,8 @@ function setMapRegionLevel(v){
   summary.updateChartScale_Measure();
   summary.refreshViz_Active();
 };
+
+var skipZoom=true;
 
 function loadBrowser(){
   browser = new kshf.Browser({
@@ -318,9 +328,11 @@ function loadBrowser(){
       this.recordDisplay.collapseRecordViewSummary(true);
       this.recordDisplay.DOM.recordDisplayName.html("Incident Descriptions");
 
+      skipZoom = false;
     },
     summaries: [
       { name: "Incident Type",
+        description: "Reported actions or events that takes place in one time, one geographic location involving at least one actor. View codebook for detailed descriptions of each incident type.",
         value: function(){
           switch(this.Type){
             case 'Demonstration':
@@ -348,6 +360,7 @@ function loadBrowser(){
         }
       },
       { name: "Casualty Types", 
+        description: "Reported human and economic impact associated with an incident (death, injury, property damage, or arrest).",
         value: function(){
           var r=[];
           if(this.Consequences) this.Consequences.forEach(function(c){
@@ -386,7 +399,8 @@ function loadBrowser(){
           return r;
         }
       },
-      { name: "Incident Motivations", 
+      { name: "Motivations", 
+        description: "Reported motivations and/or reasons behind the incident inputted. Motivations are separated into six categories: 1) Personal dispute, 2) Social economic motivations, 3) Political motivations, 4) Religious motivations, 5) Crime, and 6) Other motivations.",
         value: function(){
           var r=[];
           if(this.Causes) this.Causes.forEach(function(c){
@@ -447,6 +461,7 @@ function loadBrowser(){
         catLabel: function(){ return this.id.substr(2,10000); },
         catMap: function(){ return _geo[this.id]; },
         onMapProject: function(){
+          if(skipZoom) return;
           var v= this.leafletAttrMap.getZoom();
           if(v<8){
             setMapRegionLevel('1');
@@ -461,6 +476,7 @@ function loadBrowser(){
         // auto adjust the zoom level on zoom
       },
       { name: "Victim Types",
+        description: "Reported actors who were targeted by another actor and suffered a human or economic impact",
         value: function(){
           var r=[];
           if(this.Responders) this.Responders.forEach(function(c){
@@ -471,6 +487,7 @@ function loadBrowser(){
         },
         panel: "right" },
       { name: "Perpetrator Types",
+        description: "Reported actors that may have caused a human or economic impact on another actor",
         value: function(){
           var r=[];
           if(this.Instigators) this.Instigators.forEach(function(c){
@@ -604,5 +621,10 @@ function showIncidentDetails(){
       <div id="demo_PageTitle">Incidents in Bangladesh 2015-2016: Online Media Review</div>
       <div id="demo_Browser"></div>
       </div>
+
+    <div id="demo_Infobox">
+      Data are open source and based on review of online media in Bangladesh. There may be errors in data collection, validation and/or reporting.
+      </div>
+
   </body>
 </html>
