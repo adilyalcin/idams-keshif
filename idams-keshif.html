@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>IDAMS - Bangladesh</title>
+    <title>Incidents in Bangladesh 2015-2016: Online Media Review</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <script type="text/javascript" src="./js/jquery-1.11.1.min.js"></script>
@@ -34,9 +34,7 @@ var _geo = {}; // holds indexed geo-json objects for mapping
 // topojson -o adm_2.json simple2.json -p
 // topojson -o adm_3.json simple3.json -p
 
-function loadData(browser){
-  // Load topojson file
-  var records = kshf.dt_id["Country Data (2012)"];
+function loadMaps(browser){
   browser.asyncDataWaitedCnt+=3;
   $.ajax({
     url: './geojson/adm_1.json',
@@ -69,6 +67,8 @@ function loadData(browser){
 
 function getActor(v){
   switch(v){
+    case 'NEO JMB': return "Neo Jama'atul Mujahideen Bangladesh";
+
     case 'Cargo vehicle':
     case 'Passenger vehicle':
     case 'Private vehicle':
@@ -80,6 +80,30 @@ function getActor(v){
     case 'CNG tricycle':
     case 'Airplane/helicopter': return 'Motorized Vehicle';
 
+    case 'Allahr Dol':
+    case 'Bangladesh Jihad Group':
+    case 'Dalautul Islam':
+    case 'Harkat Ul-Jihad...':
+    case 'Gono Mukti Front':
+    case 'Harkat-ul-Jihad-al Islami Bangladesh':
+    case 'Harkat-ul-Jihad-al Islami Bangladesh (HUJI-B)-Outlawed':
+    case 'Hartkat Ul Ansar':
+    case 'Hefazat-e-Islam':
+    case 'Hizb-Ut Tawhid':
+    case 'Hizb-Ut-Tawhid':
+    case 'Hizubt-u-Tahrir Bangladesh':
+    case 'Hizb-Ut-Tahrir Bangladesh':
+    case 'Itehadul Mujahidin':
+    case 'Jagrata Muslim Janata Bangladesh':
+    case 'Junud at-Tawheed Wal Khilafah':
+    case 'Khelafat Majlish':
+    case 'Muslim League':
+    case 'Rohingya Solidarity Organization':
+    case 'Shahadat-e Al-Hikma':
+    case 'Shaheed Hamza Brigade':
+    case 'Tehrik-e-Khatme... +': 
+      return 'Other Militant Group';
+
     case 'Fire':
     case 'Flood':
     case 'Health/Medical':
@@ -89,7 +113,8 @@ function getActor(v){
     case 'Earthquake':
     case 'Fire Outbreak':
     case 'Boat Accident':
-    case 'Other Hazard': return 'Hazard';
+    case 'Other Hazard': 
+      return 'Hazard';
 
     case 'Public Space':
     case 'Public building/facility':
@@ -97,34 +122,43 @@ function getActor(v){
     case 'Real estate property':
     case 'Real estate':
     case 'Commercial property':
-    case 'Other private property': return 'Public and Private Property';
+    case 'Other private property':
+      return 'Public and Private Property';
 
     case 'Hindu':
     case 'Buddhist':
     case 'Budhist':
     case 'Christian':
-    case 'Ethnic minorities': return 'Religious and Ethnic Minorities';
+    case 'Ethnic minorities':
+      return 'Religious and Ethnic Minorities';
 
     case 'Joint Force Bangladesh':
     case 'Police Force Bangladesh':
     case 'Rapid Action Batallion':
     case 'Border Guard Bangladesh':
-    case 'Bangladesh Ansars and Village Defence Party': return 'Bangladesh Security Forces';
+    case 'Counter Terrorrism and Transnational Unit':
+    case 'Bangladesh Ansars and Village Defence Party':
+      return 'Bangladesh Security Forces';
 
     case 'Coast Guard Bangladesh':
     case 'Army Bangladesh':
     case 'Navy Bangladesh':
-    case 'Air Force Bangladesh': return 'Armed Forces';
+    case 'Air Force Bangladesh':
+      return 'Armed Forces';
 
     case 'Bangladesh Sramik League':
     case 'Bangladesh Kirshak League':
     case 'Bangladesh Swechchasebak':
     case 'Bangladesh Swechchasebak Leauge':
-    case 'Bangladesh Swechchasebak League': return "Other Awami League Branch";
+    case 'Projonmo League':
+    case 'Awami Olama League':
+    case 'Bangladesh Swechchasebak League':
+      return "Other Awami League Branch";
 
     case 'Jatiyatabadi Sramik Dal':
     case 'Jatiyatabadi Krishak Dal':
-    case 'Jatiyatabadi Sechchasebak Dal': return "Other BNP Branch";
+    case 'Jatiyatabadi Sechchasebak Dal':
+      return "Other BNP Branch";
     
     case 'Zaker Party':
     case 'Khelafat Andolon':
@@ -134,7 +168,8 @@ function getActor(v){
     case 'Havezat-e-Islam':
     case 'Islami Oikya Jote':
     case 'Khelafat Majlish,':
-    case 'Jamiyate Ulamaye Islam': return "Other Islamist Leaning Parties";
+    case 'Jamiyate Ulamaye Islam':
+      return "Other Islamist Leaning Parties";
     
     case 'Central Government':
     case 'Central government':
@@ -146,7 +181,8 @@ function getActor(v){
     case 'Information Commission':
     case 'Anti Corruption Commission':
     case 'Judicial Institutions':
-    case 'Universities': return "Public Institutions";
+    case 'Universities':
+      return "Public Institutions";
 
     case 'Bangladesh Chhatro Union':
     case 'Pragatishil Chhatro Jote':
@@ -180,8 +216,18 @@ function getActor(v){
     case 'Oikyabaddha Nagarik Andolan':
     case 'Parbatya Chattagram Jana Sanghati Samiti (Reformist)':
     case 'Parbatya Chattagram Jana Sanghati Samiti':
-    case 'United Peoples Democratic Front': return "Other Political Parties";
+    case 'Parbatya Chattagram Pahari Chhatra Parishad':
+    case 'New Biplobi Communist Party':
+    case 'Biplobi Communist Party':
+    case 'Parbatya Chattagram':
+    case 'Purba Banglar Communist Party':
+    case 'Independent':
+    case 'Indpendent':
+    case 'United Peoples Democratic Front':
+      return "Other Political Parties";
 
+    case 'Foreign Government': 
+      return; // removed
   }
   return v;
 }
@@ -202,7 +248,7 @@ function setMapRegionLevel(v){
   summary.refreshViz_Active();
 };
 
-$(document).ready( function() {
+function loadBrowser(){
   browser = new kshf.Browser({
     domID: "#demo_Browser",
     recordName: "Incidents",
@@ -210,7 +256,7 @@ $(document).ready( function() {
       dirPath: 'https://storage.googleapis.com/keshif-data/',
       fileType: "json",
       tables: "incidents",
-      callback: loadData
+      callback: loadMaps
     },
     onLoad: function(){
       var p = d3.timeParse("%Y-%m-%d");
@@ -234,6 +280,12 @@ $(document).ready( function() {
         var dom = s.catTable_id[id].DOM.aggrGlyph;
         d3.select(dom).classed("geo_level_"+id.substr(0,1),true);
       };
+
+      s.DOM.root.select(".textSearchInput").attr("placeholder","Search location");
+
+      browser.DOM.root.select(".rightBoxes").insert("a",":first-child").attr("class","fa fa-download")
+        .attr("href",'https://storage.googleapis.com/keshif-data/incidents.json')
+        .attr("target","_blank")
 
       var h =  s.DOM.summaryControls.style('height','22px')
         .append("div").styles({ 
@@ -273,19 +325,23 @@ $(document).ready( function() {
           switch(this.Type){
             case 'Demonstration':
             case 'Procession':
-            case 'Strike': return 'Demonstration';
+            case 'Strike': 
+              return 'Demonstration';
             
             case 'General Strike':
-            case 'Call for Blockade': return 'General Strike';
+            case 'Call for Blockade':
+              return 'General Strike';
             
             case 'Fire': 
             case 'Water Accident ':
             case 'Water Accident':
             case 'Railway accident':
-            case 'Infrastructure failure': return 'Other Hazards';
+            case 'Infrastructure failure':
+              return 'Other Hazards';
 
             case 'Natural Hazard':
-            case 'Thunderstorm': return 'Natural Hazards';
+            case 'Thunderstorm': 
+              return 'Natural Hazards';
             //case '': return '';
           }
           return this.Type;
@@ -296,23 +352,34 @@ $(document).ready( function() {
           var r=[];
           if(this.Consequences) this.Consequences.forEach(function(c){
             switch(c){
-              case 'Sentence / verdict': return;
-              case 'Arms and weapons recovered': return;
-              case 'Rescued': return;
-              case 'Rescued ': return;
-              case 'Case filed': return;
-              case 'Missing': return;
-              case 'Property loss': return;
-              case 'Torture': return;
-              case 'Delivered Extradition': return;
-              case 'IED recovered': return;
-              case 'Section 144 Imposed': return;
-              case 'Vehicle damaged': return;
-              case 'No Consequence Reported': return;
-              case 'Firearms recovered': return;
-              case 'IED and other explosives recovered': return;
-              case 'Ammunition recovered': return;
-              case 'Ammunition or IED material recovered': return;
+              case 'Sentence / verdict':
+              case 'Arms and weapons recovered':
+              case 'Rescued':
+              case 'Rescued ':
+              case 'Case filed':
+              case 'Missing':
+              case 'Property loss':
+              case 'Torture':
+              case 'Delivered Extradition':
+              case 'IED recovered':
+              case 'Section 144 Imposed':
+              case 'Vehicle damaged':
+              case 'No Consequence Reported':
+              case 'Firearms recovered':
+              case 'IED and other explosives recovered':
+              case 'Ammunition recovered':
+              case 'Ammunition or IED material recovered':
+              case 'Delivered/Extradition':
+              case 'Delivered/Extradition ':
+              case 'Intimidation/Threat':
+              case 'Abduction/Disappearance':
+              case 'Sexual assault':
+              case 'Rape':
+                return; // removed
+
+              case 'Private property damaged': 
+              case 'Public property damaged': 
+                c ='Property Damaged'; break;
             }
             r.push(c);
           });
@@ -444,9 +511,9 @@ $(document).ready( function() {
       }*/
     ],
     leftPanelLabelWidth: 250,
-    rightPanelLabelWidth: 200,
+    rightPanelLabelWidth: 240,
     middlePanelLabelWidth: 160,
-    barChartWidth: 120,
+    barChartWidth: 100,
     recordDisplay: {
       displayType: "list",
       sortBy: "Date",
@@ -462,6 +529,27 @@ $(document).ready( function() {
     }
   }
   );
+};
+
+function hashCode(str){
+  var hash = 0;
+  if (str.length == 0) return hash;
+  for (i = 0; i < str.length; i++) {
+    char = str.charCodeAt(i);
+    hash = ((hash<<5)-hash)+char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash;
+}
+
+$(document).ready( function() {
+  var code = prompt("Please provide the passcode for this website");
+  if(hashCode(code)===1953860645){
+    loadBrowser();
+  } else {
+    alert("The code is not correct");
+  }
+
 });
 
 function showIncidentDetails(){
@@ -501,10 +589,19 @@ function showIncidentDetails(){
   font-size: 0.9em;
   color: gray;
 }
+.fa-download{
+  color: #635d46 !important;
+}
+.fa-download:hover{
+  color: orangered !important;
+}
+.authorButton{
+  display: none !important;
+}
 </style>
   <body>
     <div class="contents">
-      <div id="demo_PageTitle">IDAMS - Bangladesh</div>
+      <div id="demo_PageTitle">Incidents in Bangladesh 2015-2016: Online Media Review</div>
       <div id="demo_Browser"></div>
       </div>
   </body>
